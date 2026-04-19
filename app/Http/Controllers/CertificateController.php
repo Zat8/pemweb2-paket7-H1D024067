@@ -1,27 +1,55 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Certificate;
 use Illuminate\Support\Facades\Auth;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
 
 class CertificateController extends Controller
 {
-    public function verify($certNumber)
+    /**
+     * Halaman verifikasi publik sertifikat (Tantangan #76)
+     * Dapat diakses tanpa login. Parameter opsional agar tidak error saat form kosong.
+     */
+    public function verify($certNumber = null)
     {
-        $cert = Certificate::with(['registration.user', 'registration.event'])->where('certificate_number', strtoupper($certNumber))->first();
+        $cert = null;
+
+        if ($certNumber) {
+            $cert = Certificate::with(['registration.user', 'registration.event'])
+                ->where('certificate_number', strtoupper(trim($certNumber)))
+                ->first();
+        }
+
         return view('certificates.verify', compact('cert'));
     }
 
+    /**
+     * Download sertifikat PDF dengan validasi kepemilikan (Tantangan #77)
+     * Hanya Admin atau Peserta pemilik sertifikat yang boleh mengunduh.
+     */
     public function download(Certificate $certificate)
     {
-        // Validasi Kepemilikan (#77)
-        if (Auth::user()->role !== 'admin' && $certificate->registration->user_id !== Auth::id()) {
-            abort(403, 'Anda tidak memiliki akses ke sertifikat ini.');
+        // 1. Wajib login
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu untuk mengunduh sertifikat.');
         }
-        
+
+        $user = Auth::user();
+
+        // 2. Otorisasi: Admin boleh semua, Peserta hanya miliknya sendiri
+        if ($user->role !== 'admin' && $certificate->registration->user_id !== $user->id) {
+            abort(403, 'Akses ditolak. Anda tidak memiliki hak untuk mengunduh sertifikat ini.');
+        }
+
+        // 3. Validasi file fisik di storage
         $filePath = storage_path('app/public/' . $certificate->file_path);
-        if (!file_exists($filePath)) abort(404, 'File PDF belum digenerate.');
-        return response()->download($filePath);
+        if (!file_exists($filePath)) {
+            abort(404, 'File PDF sertifikat belum digenerate atau telah dihapus dari server.');
+        }
+
+        // 4. Return response download
+        return response()->download($filePath, 'Sertifikat_' . $certificate->certificate_number . '.pdf');
     }
 }

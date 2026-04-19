@@ -10,4 +10,5 @@ class Event extends Model
     public function category() { return $this->belongsTo(EventCategory::class, 'event_category_id'); }
     public function creator() { return $this->belongsTo(User::class, 'created_by'); }
     public function registrations() { return $this->hasMany(Registration::class); }
+    public function attendances() { return $this->hasManyThrough(Attendance::class, Registration::class); }
 }

@@ -53,25 +53,6 @@ Route::middleware(['auth', 'role:admin,panitia'])->prefix('admin/events')->name(
     Route::delete('/{event}', [App\Http\Controllers\EventController::class, 'destroy'])->name('destroy');
 });
 
-// Dashboard Routes per Role (Update dari Fase 4)
-Route::middleware('auth')->group(function () {
-    Route::get('/admin/dashboard', function () {
-        $totalEvents = \App\Models\Event::count();
-        $totalParticipants = \App\Models\User::where('role', 'peserta')->count();
-        return view('dashboard', compact('totalEvents', 'totalParticipants'));
-    })->middleware('role:admin')->name('admin.dashboard');
-
-    Route::get('/panitia/dashboard', function () {
-        $myEvents = \App\Models\Event::where('created_by', auth()->id())->count();
-        return view('dashboard', compact('myEvents'));
-    })->middleware('role:panitia')->name('panitia.dashboard');
-
-    Route::get('/peserta/dashboard', function () {
-        $myRegistrations = auth()->user()->registrations()->with('event')->get();
-        return view('dashboard', compact('myRegistrations'));
-    })->middleware('role:peserta')->name('peserta.dashboard');
-});
-
 // ========================================
 // ROUTES ABSENSI & SERTIFIKAT (Paket 7)
 // ========================================
