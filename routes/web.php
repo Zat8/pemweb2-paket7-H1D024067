@@ -1,13 +1,17 @@
 <?php
 
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\EventCategoryController;
+use App\Http\Controllers\EventController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RegistrationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-// Route per Role (mengganti route /dashboard bawaan Breeze)
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
         return match (auth()->user()->role) {
@@ -18,7 +22,7 @@ Route::middleware('auth')->group(function () {
     })->name('dashboard');
 
     Route::get('/admin/dashboard', function () {
-        return view('dashboard'); // Sementara pakai view default Breeze
+        return view('dashboard');
     })->middleware('role:admin')->name('admin.dashboard');
 
     Route::get('/panitia/dashboard', function () {
@@ -29,43 +33,40 @@ Route::middleware('auth')->group(function () {
         return view('dashboard');
     })->middleware('role:peserta')->name('peserta.dashboard');
 
-    // Route Profile bawaan Breeze
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// ========================================
-// ROUTES PAKET 7 - EVENT & REGISTRASI
-// ========================================
+Route::get('/events', [EventController::class, 'index'])->name('events.public.index');
+Route::get('/events/{event:slug}', [EventController::class, 'show'])->name('events.public.show');
 
-// Public Routes (Katalog Event)
-Route::get('/events', [App\Http\Controllers\EventController::class, 'index'])->name('events.public.index');
-Route::get('/events/{event:slug}', [App\Http\Controllers\EventController::class, 'show'])->name('events.public.show');
-
-// Protected Routes - Admin & Panitia Only
 Route::middleware(['auth', 'role:admin,panitia'])->prefix('admin/events')->name('events.admin.')->group(function () {
-    Route::get('/', [App\Http\Controllers\EventController::class, 'adminIndex'])->name('index');
-    Route::get('/create', [App\Http\Controllers\EventController::class, 'create'])->name('create');
-    Route::post('/', [App\Http\Controllers\EventController::class, 'store'])->name('store');
-    Route::get('/{event}/edit', [App\Http\Controllers\EventController::class, 'edit'])->name('edit');
-    Route::put('/{event}', [App\Http\Controllers\EventController::class, 'update'])->name('update');
-    Route::delete('/{event}', [App\Http\Controllers\EventController::class, 'destroy'])->name('destroy');
+    Route::get('/', [EventController::class, 'adminIndex'])->name('index');
+    Route::get('/create', [EventController::class, 'create'])->name('create');
+    Route::post('/', [EventController::class, 'store'])->name('store');
+    Route::get('/{event}/edit', [EventController::class, 'edit'])->name('edit');
+    Route::put('/{event}', [EventController::class, 'update'])->name('update');
+    Route::delete('/{event}', [EventController::class, 'destroy'])->name('destroy');
 });
 
-// ========================================
-// ROUTES ABSENSI & SERTIFIKAT (Paket 7)
-// ========================================
+Route::middleware(['auth', 'role:admin'])->prefix('admin/event-categories')->name('event-categories.')->group(function () {
+    Route::get('/', [EventCategoryController::class, 'index'])->name('index');
+    Route::post('/', [EventCategoryController::class, 'store'])->name('store');
+    Route::delete('/{eventCategory}', [EventCategoryController::class, 'destroy'])->name('destroy');
+});
 
-// Panitia: Scan Absensi
+Route::middleware(['auth', 'role:peserta'])->group(function () {
+    Route::post('/registrations', [RegistrationController::class, 'store'])->name('registrations.store');
+});
+
 Route::middleware(['auth', 'role:admin,panitia'])->prefix('panitia/attendance')->name('attendance.')->group(function () {
-    Route::get('/', [App\Http\Controllers\AttendanceController::class, 'index'])->name('index');
-    Route::post('/', [App\Http\Controllers\AttendanceController::class, 'store'])->name('store');
-    Route::get('/export/{event}', [App\Http\Controllers\AttendanceController::class, 'export'])->name('export');
+    Route::get('/', [AttendanceController::class, 'index'])->name('index');
+    Route::post('/', [AttendanceController::class, 'store'])->name('store');
+    Route::get('/export/{event}', [AttendanceController::class, 'export'])->name('export');
 });
 
-// Sertifikat
-Route::get('/certificates/verify/{certNumber?}', [App\Http\Controllers\CertificateController::class, 'verify'])->name('certificates.verify');
-Route::middleware('auth')->get('/certificates/download/{certificate}', [App\Http\Controllers\CertificateController::class, 'download'])->name('certificates.download');
+Route::get('/certificates/verify/{certNumber?}', [CertificateController::class, 'verify'])->name('certificates.verify');
+Route::middleware('auth')->get('/certificates/download/{certificate}', [CertificateController::class, 'download'])->name('certificates.download');
 
 require __DIR__.'/auth.php';

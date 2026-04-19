@@ -2,63 +2,43 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EventCategory;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class EventCategoryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(): View
     {
-        //
+        $categories = EventCategory::withCount('events')->latest()->get();
+
+        return view('event-categories.index', compact('categories'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function store(Request $request): RedirectResponse
     {
-        //
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255', 'unique:event_categories,name'],
+        ], [
+            'name.required' => 'Nama kategori wajib diisi.',
+            'name.unique' => 'Kategori ini sudah ada.',
+        ]);
+
+        EventCategory::create($validated);
+
+        return redirect()->route('event-categories.index')->with('success', 'Kategori event berhasil ditambahkan.');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function destroy(EventCategory $eventCategory): RedirectResponse
     {
-        //
-    }
+        if ($eventCategory->events()->exists()) {
+            return redirect()->route('event-categories.index')
+                ->with('error', 'Kategori tidak bisa dihapus karena masih dipakai oleh event.');
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        $eventCategory->delete();
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return redirect()->route('event-categories.index')->with('success', 'Kategori event berhasil dihapus.');
     }
 }
