@@ -12,8 +12,13 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
+                    @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'panitia']))
+                        <x-nav-link :href="route('attendance.index')" :active="request()->routeIs('attendance.*')">
+                            {{ __('Scan Absensi') }}
+                        </x-nav-link>
+                    @endif
+                    <x-nav-link :href="route('certificates.verify')" :active="request()->routeIs('certificates.verify')">
+                        {{ __('Verifikasi Sertifikat') }}
                     </x-nav-link>
                 </div>
             </div>

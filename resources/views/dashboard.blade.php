@@ -72,8 +72,8 @@
                                     <span class="text-green-600 text-sm font-semibold">✅ Sudah Hadir</span>
                                 @elseif($reg->certificate)
                                     <a href="{{ route('certificates.download', $reg->certificate) }}" 
-                                       class="text-indigo-600 text-sm font-semibold hover:underline">
-                                        📄 Unduh Sertifikat
+                                    class="text-indigo-600 text-sm font-semibold hover:underline">
+                                    📄 Unduh Sertifikat PDF
                                     </a>
                                 @else
                                     <span class="text-yellow-600 text-sm">⏳ Menunggu Event</span>

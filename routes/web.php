@@ -72,4 +72,19 @@ Route::middleware('auth')->group(function () {
     })->middleware('role:peserta')->name('peserta.dashboard');
 });
 
+// ========================================
+// ROUTES ABSENSI & SERTIFIKAT (Paket 7)
+// ========================================
+
+// Panitia: Scan Absensi
+Route::middleware(['auth', 'role:admin,panitia'])->prefix('panitia/attendance')->name('attendance.')->group(function () {
+    Route::get('/', [App\Http\Controllers\AttendanceController::class, 'index'])->name('index');
+    Route::post('/', [App\Http\Controllers\AttendanceController::class, 'store'])->name('store');
+    Route::get('/export/{event}', [App\Http\Controllers\AttendanceController::class, 'export'])->name('export');
+});
+
+// Sertifikat
+Route::get('/certificates/verify/{certNumber?}', [App\Http\Controllers\CertificateController::class, 'verify'])->name('certificates.verify');
+Route::middleware('auth')->get('/certificates/download/{certificate}', [App\Http\Controllers\CertificateController::class, 'download'])->name('certificates.download');
+
 require __DIR__.'/auth.php';
