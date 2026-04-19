@@ -9,6 +9,14 @@ Route::get('/', function () {
 
 // Route per Role (mengganti route /dashboard bawaan Breeze)
 Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', function () {
+        return match (auth()->user()->role) {
+            'admin' => redirect()->route('admin.dashboard'),
+            'panitia' => redirect()->route('panitia.dashboard'),
+            default => redirect()->route('peserta.dashboard'),
+        };
+    })->name('dashboard');
+
     Route::get('/admin/dashboard', function () {
         return view('dashboard'); // Sementara pakai view default Breeze
     })->middleware('role:admin')->name('admin.dashboard');
