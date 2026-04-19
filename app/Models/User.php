@@ -14,19 +14,12 @@ use Illuminate\Notifications\Notifiable;
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    protected $fillable = ['name', 'email', 'password', 'role', 'institution'];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
+    public function registrations() { return $this->hasMany(Registration::class); }
+    public function createdEvents() { return $this->hasMany(Event::class, 'created_by'); }
+
+    public function isAdmin() { return $this->role === 'admin'; }
+    public function isPanitia() { return $this->role === 'panitia'; }
+    public function isPeserta() { return $this->role === 'peserta'; }
 }
