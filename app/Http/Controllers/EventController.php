@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Event;
-use App\Models\EventCategory;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
+use App\Models\Event;
+use App\Models\EventCategory;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class EventController extends Controller
 {
@@ -18,8 +19,7 @@ class EventController extends Controller
         $query = Event::with(['category', 'creator'])
             ->withCount('registrations')
             ->whereIn('status', ['published', 'closed']);
-        
-        // Search & Filter
+
         if (request('search')) {
             $query->where('title', 'like', '%'.request('search').'%');
         }
@@ -29,10 +29,10 @@ class EventController extends Controller
         if (request('date')) {
             $query->whereDate('event_date', request('date'));
         }
-        
+
         $events = $query->orderBy('event_date', 'asc')->paginate(10)->withQueryString();
         $categories = EventCategory::all();
-        
+
         return view('events.public.index', compact('events', 'categories'));
     }
 
@@ -44,33 +44,46 @@ class EventController extends Controller
         }
 
         $event->load(['category', 'creator'])->loadCount('registrations');
-        $isRegistered = Auth::check() ? $event->registrations()->where('user_id', Auth::id())->exists() : false;
-        $isFull = $event->isFull();
+
         $registration = Auth::check()
-            ? $event->registrations()->with('certificate')->where('user_id', Auth::id())->first()
+            ? $event->registrations()->with(['attendance', 'certificate'])->where('user_id', Auth::id())->first()
             : null;
-        
-        return view('events.public.show', compact('event', 'isRegistered', 'isFull', 'registration'));
+
+        $isRegistered = $registration !== null;
+        $isFull = $event->isFull();
+        $registrationTicketUrl = $registration ? route('tickets.show', $registration->ticket_token) : null;
+        $registrationQrSvg = $registration
+            ? QrCode::format('svg')->size(180)->margin(1)->errorCorrection('H')->generate($registrationTicketUrl)
+            : null;
+
+        return view('events.public.show', compact(
+            'event',
+            'isRegistered',
+            'isFull',
+            'registration',
+            'registrationTicketUrl',
+            'registrationQrSvg'
+        ));
     }
 
     // DASHBOARD ADMIN/PANITIA: List Event
     public function adminIndex()
     {
         $query = Event::with(['category', 'creator'])->withCount('registrations');
-        
-        // Filter hanya event yang dibuat oleh panitia (bukan admin)
+
         if (Auth::user()->role === 'panitia') {
             $query->where('created_by', Auth::id());
         }
-        
+
         if (request('search')) {
             $query->where('title', 'like', '%'.request('search').'%');
         }
         if (request('status')) {
             $query->where('status', request('status'));
         }
-        
+
         $events = $query->latest()->paginate(10)->withQueryString();
+
         return view('events.admin.index', compact('events'));
     }
 
@@ -78,6 +91,7 @@ class EventController extends Controller
     public function create()
     {
         $categories = EventCategory::all();
+
         return view('events.admin.create', compact('categories'));
     }
 
@@ -87,25 +101,26 @@ class EventController extends Controller
         $data = $request->validated();
         $data['slug'] = $this->generateUniqueSlug($data['title']);
         $data['created_by'] = Auth::id();
-        
-        // Handle Upload Poster
+
         if ($request->hasFile('poster')) {
             $path = $request->file('poster')->store('posters', 'public');
             $data['poster'] = $path;
         }
-        
+
         Event::create($data);
+
         return redirect()->route('events.admin.index')->with('success', 'Event berhasil dibuat!');
     }
 
     // EDIT: Form Edit Event
     public function edit(Event $event)
     {
-        // Hanya creator atau admin yang bisa edit
         if (Auth::user()->role !== 'admin' && $event->created_by !== Auth::id()) {
             abort(403);
         }
+
         $categories = EventCategory::all();
+
         return view('events.admin.edit', compact('event', 'categories'));
     }
 
@@ -115,21 +130,21 @@ class EventController extends Controller
         if (Auth::user()->role !== 'admin' && $event->created_by !== Auth::id()) {
             abort(403);
         }
-        
+
         $data = $request->validated();
         $data['slug'] = $this->generateUniqueSlug($data['title'], $event->id);
-        
-        // Handle Upload Poster Baru
+
         if ($request->hasFile('poster')) {
-            // Hapus poster lama jika ada
             if ($event->poster && Storage::disk('public')->exists($event->poster)) {
                 Storage::disk('public')->delete($event->poster);
             }
+
             $path = $request->file('poster')->store('posters', 'public');
             $data['poster'] = $path;
         }
-        
+
         $event->update($data);
+
         return redirect()->route('events.admin.index')->with('success', 'Event berhasil diperbarui!');
     }
 
@@ -139,13 +154,13 @@ class EventController extends Controller
         if (Auth::user()->role !== 'admin' && $event->created_by !== Auth::id()) {
             abort(403);
         }
-        
-        // Hapus file poster jika ada
+
         if ($event->poster && Storage::disk('public')->exists($event->poster)) {
             Storage::disk('public')->delete($event->poster);
         }
-        
+
         $event->delete();
+
         return redirect()->route('events.admin.index')->with('success', 'Event berhasil dihapus!');
     }
 

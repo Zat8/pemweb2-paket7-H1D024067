@@ -50,7 +50,7 @@ class AttendanceController extends Controller
 
             $registration = Registration::query()
                 ->where('event_id', $event->id)
-                ->where('ticket_token', $token)
+                ->whereRaw('UPPER(ticket_token) = ?', [$token])
                 ->with(['event', 'user', 'attendance', 'certificate'])
                 ->lockForUpdate()
                 ->first();
