@@ -11,4 +11,11 @@ class Event extends Model
     public function creator() { return $this->belongsTo(User::class, 'created_by'); }
     public function registrations() { return $this->hasMany(Registration::class); }
     public function attendances() { return $this->hasManyThrough(Attendance::class, Registration::class); }
+
+    public function isFull(): bool
+    {
+        $count = $this->registrations_count ?? $this->registrations()->count();
+
+        return $count >= $this->quota;
+    }
 }

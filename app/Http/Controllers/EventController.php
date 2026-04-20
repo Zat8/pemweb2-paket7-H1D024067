@@ -7,15 +7,17 @@ use App\Models\EventCategory;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class EventController extends Controller
 {
     // HALAMAN PUBLIK: Katalog Event
     public function index()
     {
-        $query = Event::with(['category', 'creator'])->where('status', 'published');
+        $query = Event::with(['category', 'creator'])
+            ->withCount('registrations')
+            ->whereIn('status', ['published', 'closed']);
         
         // Search & Filter
         if (request('search')) {
@@ -37,20 +39,24 @@ class EventController extends Controller
     // DETAIL EVENT PUBLIK
     public function show(Event $event)
     {
-        if ($event->status !== 'published') {
+        if (! in_array($event->status, ['published', 'closed'], true)) {
             abort(404);
         }
-        $event->load(['category', 'creator', 'registrations']);
+
+        $event->load(['category', 'creator'])->loadCount('registrations');
         $isRegistered = Auth::check() ? $event->registrations()->where('user_id', Auth::id())->exists() : false;
-        $isFull = $event->registrations()->count() >= $event->quota;
+        $isFull = $event->isFull();
+        $registration = Auth::check()
+            ? $event->registrations()->with('certificate')->where('user_id', Auth::id())->first()
+            : null;
         
-        return view('events.public.show', compact('event', 'isRegistered', 'isFull'));
+        return view('events.public.show', compact('event', 'isRegistered', 'isFull', 'registration'));
     }
 
     // DASHBOARD ADMIN/PANITIA: List Event
     public function adminIndex()
     {
-        $query = Event::with(['category', 'creator']);
+        $query = Event::with(['category', 'creator'])->withCount('registrations');
         
         // Filter hanya event yang dibuat oleh panitia (bukan admin)
         if (Auth::user()->role === 'panitia') {
@@ -79,7 +85,7 @@ class EventController extends Controller
     public function store(StoreEventRequest $request)
     {
         $data = $request->validated();
-        $data['slug'] = Str::slug($data['title']);
+        $data['slug'] = $this->generateUniqueSlug($data['title']);
         $data['created_by'] = Auth::id();
         
         // Handle Upload Poster
@@ -111,7 +117,7 @@ class EventController extends Controller
         }
         
         $data = $request->validated();
-        $data['slug'] = Str::slug($data['title']);
+        $data['slug'] = $this->generateUniqueSlug($data['title'], $event->id);
         
         // Handle Upload Poster Baru
         if ($request->hasFile('poster')) {
@@ -141,5 +147,24 @@ class EventController extends Controller
         
         $event->delete();
         return redirect()->route('events.admin.index')->with('success', 'Event berhasil dihapus!');
+    }
+
+    protected function generateUniqueSlug(string $title, ?int $ignoreId = null): string
+    {
+        $baseSlug = Str::slug($title);
+        $slug = $baseSlug;
+        $counter = 2;
+
+        while (
+            Event::query()
+                ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
+                ->where('slug', $slug)
+                ->exists()
+        ) {
+            $slug = $baseSlug.'-'.$counter;
+            $counter++;
+        }
+
+        return $slug;
     }
 }

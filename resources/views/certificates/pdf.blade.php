@@ -12,6 +12,9 @@
         .details { font-size: 14px; color: #666; margin-top: 50px; }
         .footer { position: absolute; bottom: 40px; width: 80%; text-align: right; }
         .cert-number { font-family: monospace; font-size: 12px; color: #888; margin-top: 30px; }
+        .verify-wrap { margin-top: 30px; }
+        .verify-wrap svg { width: 120px; height: 120px; }
+        .verify-text { font-size: 11px; color: #777; margin-top: 8px; }
     </style>
 </head>
 <body>
@@ -22,9 +25,13 @@
         <p>Atas kehadirannya dalam acara:</p>
         <div class="event-title">{{ $event }}</div>
         <div class="details">
-            📅 {{ $date }} &nbsp; | &nbsp; 📍 {{ $location }}
+            {{ $date }} | {{ $location }}
         </div>
         <div class="cert-number">Nomor Sertifikat: {{ $cert_number }}</div>
+        <div class="verify-wrap">
+            {!! $verify_qr_svg !!}
+            <div class="verify-text">Verifikasi online: {{ $verify_url }}</div>
+        </div>
         <div class="footer">
             <p>Ketua Panitia</p>
             <br><br>

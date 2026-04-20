@@ -66,7 +66,10 @@
                                     {{ \Carbon\Carbon::parse($event->event_date)->format('d M Y') }}
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-500">
-                                    {{ $event->registrations()->count() }}/{{ $event->quota }}
+                                    {{ $event->registrations_count }}/{{ $event->quota }}
+                                    @if($event->isFull())
+                                        <span class="ml-2 rounded bg-red-100 px-2 py-1 text-xs font-semibold text-red-700">FULL</span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4">
                                     @php

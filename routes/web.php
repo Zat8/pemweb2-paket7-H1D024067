@@ -8,9 +8,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegistrationController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::redirect('/', '/events');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
@@ -52,12 +50,16 @@ Route::middleware(['auth', 'role:admin,panitia'])->prefix('admin/events')->name(
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin/event-categories')->name('event-categories.')->group(function () {
     Route::get('/', [EventCategoryController::class, 'index'])->name('index');
+    Route::get('/create', [EventCategoryController::class, 'create'])->name('create');
     Route::post('/', [EventCategoryController::class, 'store'])->name('store');
+    Route::get('/{eventCategory}/edit', [EventCategoryController::class, 'edit'])->name('edit');
+    Route::put('/{eventCategory}', [EventCategoryController::class, 'update'])->name('update');
     Route::delete('/{eventCategory}', [EventCategoryController::class, 'destroy'])->name('destroy');
 });
 
 Route::middleware(['auth', 'role:peserta'])->group(function () {
     Route::post('/registrations', [RegistrationController::class, 'store'])->name('registrations.store');
+    Route::get('/registrations/{registration}/ticket', [RegistrationController::class, 'downloadTicket'])->name('registrations.ticket');
 });
 
 Route::middleware(['auth', 'role:admin,panitia'])->prefix('panitia/attendance')->name('attendance.')->group(function () {

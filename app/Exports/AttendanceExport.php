@@ -3,9 +3,11 @@
 namespace App\Exports;
 
 use App\Models\Event;
-use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class AttendanceExport
+class AttendanceExport implements FromCollection, ShouldAutoSize, WithHeadings
 {
     public function __construct(protected Event $event) {}
 

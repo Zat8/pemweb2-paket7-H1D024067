@@ -30,17 +30,33 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="bg-white shadow rounded-lg p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Tambah Kategori</h3>
+                    <div class="flex items-center justify-between gap-3 mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">
+                            {{ $editingCategory ? 'Edit Kategori' : 'Tambah Kategori' }}
+                        </h3>
+                        @if($editingCategory)
+                            <a href="{{ route('event-categories.index') }}" class="text-sm text-gray-500 hover:text-gray-700">
+                                Batal Edit
+                            </a>
+                        @endif
+                    </div>
 
-                    <form method="POST" action="{{ route('event-categories.store') }}" class="space-y-4">
+                    <form
+                        method="POST"
+                        action="{{ $editingCategory ? route('event-categories.update', $editingCategory) : route('event-categories.store') }}"
+                        class="space-y-4"
+                    >
                         @csrf
+                        @if($editingCategory)
+                            @method('PUT')
+                        @endif
                         <div>
                             <label for="name" class="block text-sm font-medium text-gray-700">Nama kategori</label>
                             <input
                                 id="name"
                                 type="text"
                                 name="name"
-                                value="{{ old('name') }}"
+                                value="{{ old('name', $editingCategory?->name) }}"
                                 class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                                 placeholder="Contoh: Seminar, Workshop"
                                 required
@@ -48,7 +64,7 @@
                         </div>
 
                         <button type="submit" class="bg-yellow-300 text-black px-4 py-2 rounded-md hover:bg-yellow-400 font-medium">
-                            Simpan Kategori
+                            {{ $editingCategory ? 'Perbarui Kategori' : 'Simpan Kategori' }}
                         </button>
                     </form>
                 </div>
@@ -68,6 +84,9 @@
                                     <td class="px-6 py-4 font-medium text-gray-900">{{ $category->name }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-500">{{ $category->events_count }} event</td>
                                     <td class="px-6 py-4 text-right text-sm">
+                                        <a href="{{ route('event-categories.edit', $category) }}" class="text-indigo-600 hover:text-indigo-800 mr-4">
+                                            Edit
+                                        </a>
                                         <form method="POST" action="{{ route('event-categories.destroy', $category) }}" class="inline">
                                             @csrf
                                             @method('DELETE')

@@ -56,19 +56,19 @@
                                 <div>{{ \Carbon\Carbon::parse($event->event_date)->format('d M Y') }}</div>
                                 <div>{{ $event->start_time }} - {{ $event->end_time }}</div>
                                 <div>{{ $event->location }}</div>
-                                <div>Kuota: {{ $event->registrations()->count() }}/{{ $event->quota }}</div>
+                                <div>Kuota: {{ $event->registrations_count }}/{{ $event->quota }}</div>
                             </div>
 
                             @php
-                                $percent = min(100, ($event->registrations()->count() / $event->quota) * 100);
+                                $percent = min(100, ($event->registrations_count / max(1, $event->quota)) * 100);
                             @endphp
 
                             <div class="mt-3">
                                 <div class="w-full bg-gray-200 rounded-full h-2">
                                     <div class="bg-indigo-600 h-2 rounded-full" style="width: {{ $percent }}%"></div>
                                 </div>
-                                @if($event->registrations()->count() >= $event->quota)
-                                    <span class="text-xs text-red-600 font-semibold">Kuota Penuh</span>
+                                @if($event->isFull())
+                                    <span class="text-xs text-red-600 font-semibold">FULL</span>
                                 @endif
                             </div>
 

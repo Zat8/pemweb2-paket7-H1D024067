@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Certificate;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 class CertificateController extends Controller
 {
@@ -15,6 +14,7 @@ class CertificateController extends Controller
     public function verify($certNumber = null)
     {
         $cert = null;
+        $certNumber = $certNumber ?: request('certNumber');
 
         if ($certNumber) {
             $cert = Certificate::with(['registration.user', 'registration.event'])
@@ -22,7 +22,10 @@ class CertificateController extends Controller
                 ->first();
         }
 
-        return view('certificates.verify', compact('cert'));
+        return view('certificates.verify', [
+            'cert' => $cert,
+            'searchedNumber' => strtoupper((string) $certNumber),
+        ]);
     }
 
     /**

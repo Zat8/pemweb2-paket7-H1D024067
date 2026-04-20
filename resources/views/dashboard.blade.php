@@ -65,26 +65,37 @@
                     <h3 class="text-lg font-semibold text-gray-800 mb-4">Event yang Saya Daftari</h3>
 
                     @forelse(auth()->user()->registrations()->with(['event', 'attendance', 'certificate'])->get() as $reg)
-                        <div class="flex justify-between items-center py-3 border-b last:border-0">
-                            <div>
-                                <p class="font-medium">{{ $reg->event->title }}</p>
-                                <p class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($reg->event->event_date)->format('d M Y') }}</p>
-                                <p class="text-sm text-gray-500">
-                                    Token tiket: <span class="font-semibold text-gray-700">{{ $reg->ticket_token }}</span>
-                                </p>
-                            </div>
-                            <div class="text-right">
-                                @if($reg->attendance)
-                                    <span class="text-green-600 text-sm font-semibold">Sudah Hadir</span>
-                                @elseif($reg->certificate)
-                                    <a href="{{ route('certificates.download', $reg->certificate) }}" class="text-indigo-600 text-sm font-semibold hover:underline">
-                                        Unduh Sertifikat PDF
-                                    </a>
-                                @else
-                                    <span class="text-yellow-600 text-sm">Menunggu Event</span>
+                        <div class="flex flex-col gap-4 py-4 border-b last:border-0 md:flex-row md:items-center md:justify-between">
+                            <div class="flex items-start gap-4">
+                                @if($reg->qr_path)
+                                    <img src="{{ Storage::url($reg->qr_path) }}" alt="QR tiket {{ $reg->event->title }}" class="h-24 w-24 rounded border bg-white p-2">
                                 @endif
-                                <br>
-                                <a href="{{ route('events.public.show', $reg->event->slug) }}" class="text-xs text-gray-500 hover:text-gray-700">
+                                <div>
+                                    <p class="font-medium">{{ $reg->event->title }}</p>
+                                    <p class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($reg->event->event_date)->format('d M Y') }}</p>
+                                    <p class="text-sm text-gray-500">
+                                        Token tiket: <span class="font-semibold text-gray-700">{{ $reg->ticket_token }}</span>
+                                    </p>
+                                    <p class="text-sm text-gray-500">
+                                        Status:
+                                        @if($reg->attendance)
+                                            <span class="font-semibold text-green-600">Sudah hadir</span>
+                                        @else
+                                            <span class="font-semibold text-yellow-600">Belum check-in</span>
+                                        @endif
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-3 md:justify-end">
+                                <a href="{{ route('registrations.ticket', $reg) }}" class="inline-flex items-center rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                                    Unduh Tiket
+                                </a>
+                                @if($reg->certificate)
+                                    <a href="{{ route('certificates.download', $reg->certificate) }}" class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+                                        Unduh Sertifikat
+                                    </a>
+                                @endif
+                                <a href="{{ route('events.public.show', $reg->event->slug) }}" class="inline-flex items-center rounded-md border border-yellow-300 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-yellow-50">
                                     Lihat Detail
                                 </a>
                             </div>

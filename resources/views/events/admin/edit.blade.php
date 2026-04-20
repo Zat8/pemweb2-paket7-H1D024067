@@ -143,6 +143,7 @@
                             <option value="draft" {{ old('status', $event->status) === 'draft' ? 'selected' : '' }}>Draft</option>
                             <option value="published" {{ old('status', $event->status) === 'published' ? 'selected' : '' }}>Published</option>
                             <option value="closed" {{ old('status', $event->status) === 'closed' ? 'selected' : '' }}>Closed</option>
+                            <option value="finished" {{ old('status', $event->status) === 'finished' ? 'selected' : '' }}>Finished</option>
                         </select>
                     </div>
 

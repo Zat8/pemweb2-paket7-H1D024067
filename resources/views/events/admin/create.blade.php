@@ -134,6 +134,7 @@
                             <option value="draft" {{ old('status')==='draft'?'selected':'' }}>Draft</option>
                             <option value="published" {{ old('status')==='published'?'selected':'' }}>Published</option>
                             <option value="closed" {{ old('status')==='closed'?'selected':'' }}>Closed</option>
+                            <option value="finished" {{ old('status')==='finished'?'selected':'' }}>Finished</option>
                         </select>
                     </div>
 
