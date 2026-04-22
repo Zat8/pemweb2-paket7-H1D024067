@@ -18,7 +18,7 @@
 
                         @auth
                             @if(auth()->user()->role === 'admin' || $cert->registration->user_id === auth()->id())
-                                <a href="{{ route('certificates.download', $cert) }}" class="mt-4 inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700">
+                                <a href="{{ route('certificates.download', $cert) }}" class="mt-4 inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 font-semibold text-black hover:bg-indigo-700">
                                     Unduh Sertifikat
                                 </a>
                             @endif
@@ -42,7 +42,7 @@
                         class="flex-1 rounded-md border-gray-300 uppercase"
                         value="{{ request('certNumber', $searchedNumber) }}"
                     >
-                    <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-white">Cek</button>
+                    <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-black">Cek</button>
                 </form>
 
                 <p class="text-xs text-gray-400">Halaman ini dapat diakses publik tanpa login.</p>

@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Event;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -13,15 +14,15 @@ class AttendanceExport implements FromCollection, ShouldAutoSize, WithHeadings
 
     public function collection(): Collection
     {
-        return $this->event->attendances()->with(['registration.user', 'checkedBy'])
+        return $this->event->registrations()->with(['user', 'attendance.checkedBy'])
             ->get()
-            ->map(fn($att) => [
-                $att->registration->user->name,
-                $att->registration->user->email,
-                $att->registration->user->institution ?? '-',
-                $att->registration->ticket_token,
-                $att->checked_in_at->format('d M Y H:i:s'),
-                $att->checkedBy->name ?? 'System',
+            ->map(fn($registration) => [
+                $registration->user->name,
+                $registration->user->email,
+                $registration->user->institution ?? '-',
+                $registration->ticket_token,
+                $registration->attendance?->checked_in_at?->format('d M Y H:i:s') ?? '-',
+                $registration->attendance?->checkedBy?->name ?? '-',
             ]);
     }
 

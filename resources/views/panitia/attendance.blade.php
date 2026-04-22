@@ -51,7 +51,7 @@
                         required
                         autofocus
                     >
-                    <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 font-semibold">
+                    <button type="submit" class="bg-indigo-600 text-black px-6 py-2 rounded-md hover:bg-indigo-700 font-semibold">
                         Validasi Absen
                     </button>
                 </form>

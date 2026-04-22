@@ -72,7 +72,7 @@
                                 @endif
                             </div>
 
-                            <a href="{{ route('events.public.show', $event->slug) }}" class="block mt-4 text-center bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700">
+                            <a href="{{ route('events.public.show', $event->slug) }}" class="block mt-4 text-center bg-indigo-600 text-black py-2 rounded-md hover:bg-indigo-700">
                                 Detail & Daftar
                             </a>
                         </div>
